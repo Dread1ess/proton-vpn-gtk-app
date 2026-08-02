@@ -88,6 +88,10 @@ class ControllerProxy:
     async def _rpc_get_app_version(self, params: Any) -> Any:
         return {"app_version": self._controller.app_version}
 
+    async def _rpc_get_servers(self, params: Any) -> Any:
+        servers = self._controller.get_servers()
+        return {"servers": [self._serialize_server(server) for server in servers]}
+
     # ---- helpers ----------------------------------------------------------
 
     @staticmethod
@@ -97,6 +101,29 @@ class ControllerProxy:
             await future
             return
         await asyncio.wrap_future(future)
+
+    @staticmethod
+    def _serialize_server(server: Any) -> Dict[str, Any]:
+        """Serializes a server entry (dict or attribute-based object)."""
+        if isinstance(server, dict):
+            return {
+                "name": server.get("name"),
+                "country_code": server.get("country_code"),
+                "country_name": server.get("country_name"),
+                "city": server.get("city"),
+                "load": server.get("load"),
+            }
+        return {
+            "name": getattr(server, "name", None),
+            "country_code": getattr(
+                server, "exit_country_code", getattr(server, "country_code", None)
+            ),
+            "country_name": getattr(
+                server, "exit_country_name", getattr(server, "country_name", None)
+            ),
+            "city": getattr(server, "city", None),
+            "load": getattr(server, "load", None),
+        }
 
     @staticmethod
     def _serialize_status(state: Any) -> Dict[str, Any]:

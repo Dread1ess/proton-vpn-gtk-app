@@ -10,7 +10,66 @@ from __future__ import annotations
 import threading
 import time
 from concurrent.futures import Future, ThreadPoolExecutor
-from typing import List
+from typing import Dict, List
+
+FAKE_SERVERS: List[Dict] = [
+    {
+        "name": "CH#1",
+        "country_code": "CH",
+        "country_name": "Switzerland",
+        "city": "Zurich",
+        "load": 12,
+    },
+    {
+        "name": "CH#2",
+        "country_code": "CH",
+        "country_name": "Switzerland",
+        "city": "Geneva",
+        "load": 34,
+    },
+    {
+        "name": "DE#1",
+        "country_code": "DE",
+        "country_name": "Germany",
+        "city": "Frankfurt",
+        "load": 45,
+    },
+    {
+        "name": "DE#2",
+        "country_code": "DE",
+        "country_name": "Germany",
+        "city": "Berlin",
+        "load": 22,
+    },
+    {
+        "name": "NL#1",
+        "country_code": "NL",
+        "country_name": "Netherlands",
+        "city": "Amsterdam",
+        "load": 8,
+    },
+    {
+        "name": "US#1",
+        "country_code": "US",
+        "country_name": "United States",
+        "city": "New York",
+        "load": 51,
+    },
+    {
+        "name": "US#2",
+        "country_code": "US",
+        "country_name": "United States",
+        "city": "Los Angeles",
+        "load": 62,
+    },
+    {
+        "name": "JP#1",
+        "country_code": "JP",
+        "country_name": "Japan",
+        "city": "Tokyo",
+        "load": 18,
+    },
+]
 
 
 class _FakeState:
@@ -86,13 +145,16 @@ class FakeController:
         return self._executor.submit(_logout)
 
     def connect_to_fastest_server(self) -> Future:
-        return self._connect("connected")
+        return self._connect("connected", detail="Fastest")
 
     def connect_to_server(self, server_name: str = None) -> Future:
-        return self._connect("connected")
+        return self._connect("connected", detail=server_name or "Server")
 
     def connect_to_country(self, country_code: str) -> Future:
-        return self._connect("connected")
+        return self._connect("connected", detail=country_code or "Country")
+
+    def get_servers(self) -> List[Dict]:
+        return list(FAKE_SERVERS)
 
     def disconnect(self) -> Future:
         def _disconnect():
@@ -113,11 +175,11 @@ class FakeController:
 
     # ---- internals --------------------------------------------------------
 
-    def _connect(self, final_state: str) -> Future:
+    def _connect(self, final_state: str, detail: str = None) -> Future:
         def _do_connect():
-            self._set_state(_FakeState("connecting"))
+            self._set_state(_FakeState("connecting", detail=detail))
             time.sleep(self._delay)
-            self._set_state(_FakeState(final_state))
+            self._set_state(_FakeState(final_state, detail=detail))
             return True
 
         return self._executor.submit(_do_connect)

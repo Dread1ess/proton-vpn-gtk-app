@@ -124,6 +124,15 @@ async def run_test() -> None:
         assert login["result"]["logged_in"] is True, login
         print("OK login")
 
+        # Server list.
+        servers = await client.request("get_servers")
+        server_list = servers["result"]["servers"]
+        assert len(server_list) > 0, servers
+        assert {"name", "country_code", "country_name", "city", "load"} <= set(
+            server_list[0]
+        ), server_list[0]
+        print(f"OK get_servers ({len(server_list)} entries)")
+
         # Status before connect.
         status = await client.request("get_status")
         assert status["result"]["state"] == "disconnected", status
@@ -160,6 +169,20 @@ async def run_test() -> None:
         unknown = await client.request("does_not_exist")
         assert unknown["error"]["code"] == -32601, unknown
         print("OK unknown method rejected")
+
+        # Connect to a specific server.
+        server_task = asyncio.create_task(
+            client.request("connect_to_server", {"server_name": "CH#1"})
+        )
+        events = []
+        while len(events) < 2:
+            event = await client.read_event()
+            if event.get("method") == "connection_status":
+                events.append(event["params"]["state"])
+        assert events == ["connecting", "connected"], events
+        server_result = await server_task
+        assert server_result["result"]["state"] == "connected", server_result
+        print("OK connect_to_server CH#1:", events)
 
         await client.close()
         print("ALL TESTS PASSED")
