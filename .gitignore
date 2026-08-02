@@ -1,0 +1,12 @@
+build/
+venv
+.idea
+*.pyc
+*.egg-info/
+.coverage
+.python-version
+*.code-workspace
+venv_testing
+.vscode
+dist/
+package.spec

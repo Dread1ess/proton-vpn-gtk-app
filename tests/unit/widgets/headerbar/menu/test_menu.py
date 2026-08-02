@@ -1,0 +1,477 @@
+"""
+Copyright (c) 2023 Proton AG
+
+This file is part of Proton VPN.
+
+Proton VPN is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+Proton VPN is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with ProtonVPN.  If not, see <https://www.gnu.org/licenses/>.
+"""
+from concurrent.futures import Future
+from unittest.mock import Mock, patch, PropertyMock, call
+import pytest
+
+from proton.vpn.connection.states import Disconnected
+from proton.session.exceptions import ProtonAPINotReachable
+from proton.vpn.connection.enum import KillSwitchSetting as KillSwitchSettingEnum
+from proton.vpn.app.gtk.widgets.headerbar.menu.menu import Menu
+from proton.vpn.app.gtk import Gtk
+
+from tests.unit.testing_utils import process_gtk_events
+
+
+class TestLogoutMenuEntry:
+
+    def test_logout_menu_entry_logs_user_out_when_clicked_if_not_connected_to_vpn(self):
+        controller_mock = Mock()
+        controller_mock.get_settings.return_value.killswitch = KillSwitchSettingEnum.OFF
+        logout_future = Future()
+        logout_future.set_result(None)
+
+        controller_mock.logout.return_value = logout_future
+        controller_mock.is_connection_active = False
+
+        menu = Menu(
+            controller=controller_mock,
+            main_window=Mock(),
+            overlay_widget=Mock()
+        )
+
+        menu.logout_button_click()
+
+        process_gtk_events()
+
+        controller_mock.logout.assert_called_once()
+
+    def test_logout_menu_entry_clears_in_memory_settings_when_clicked_if_not_connected_to_vpn(self):
+        controller_mock = Mock()
+        controller_mock.get_settings.return_value.killswitch = KillSwitchSettingEnum.OFF
+        logout_future = Future()
+        logout_future.set_result(None)
+
+        controller_mock.logout.return_value = logout_future
+        controller_mock.is_connection_active = False
+
+        menu = Menu(
+            controller=controller_mock,
+            main_window=Mock(),
+            overlay_widget=Mock()
+        )
+
+        menu.logout_button_click()
+
+        process_gtk_events()
+
+    def test_logout_menu_entry_display_overlay_widget_when_clicked(self):
+        logout_future = Future()
+        logout_future.set_result(None)
+        overlay_widget_mock = Mock()
+        controller_mock = Mock()
+        controller_mock.get_settings.return_value.killswitch = KillSwitchSettingEnum.OFF
+        controller_mock.logout.return_value = logout_future
+        controller_mock.is_connection_active = False
+
+        menu = Menu(
+            controller=controller_mock,
+            main_window=Mock(),
+            overlay_widget=overlay_widget_mock
+        )
+
+        menu.logout_button_click()
+
+        widget = overlay_widget_mock.show.call_args[0][0]
+        overlay_widget_mock.show.assert_called_once()
+        assert widget.get_label() == menu.LOGOUT_LOADING_MESSAGE
+
+        process_gtk_events()
+
+        overlay_widget_mock.hide.assert_called_once()
+
+    def test_logout_menu_entry_hides_overlay_widget_when_clicked_and_logout_fails(self):
+        controller_mock = Mock()
+        controller_mock.get_settings.return_value.killswitch = KillSwitchSettingEnum.OFF
+        controller_mock.is_connection_active = False
+        logout_future_raises_exception = Future()
+        logout_future_raises_exception.set_exception(ProtonAPINotReachable("test"))
+        controller_mock.logout.return_value = logout_future_raises_exception
+        overlay_widget_mock = Mock()
+
+        menu = Menu(
+            controller=controller_mock,
+            main_window=Mock(),
+            overlay_widget=overlay_widget_mock
+        )
+
+        menu.logout_button_click()
+
+        widget = overlay_widget_mock.show.call_args[0][0]
+        overlay_widget_mock.show.assert_called_once()
+        assert widget.get_label() == menu.LOGOUT_LOADING_MESSAGE
+
+        process_gtk_events()
+
+        overlay_widget_mock.hide.assert_called_once()
+
+    def test_logout_menu_entry_is_enabled_again_after_after_it_is_clicked_and_logout_fails(self):
+        controller_mock = Mock()
+        controller_mock.get_settings.return_value.killswitch = KillSwitchSettingEnum.OFF
+        controller_mock.is_connection_active = False
+        logout_future_raises_exception = Future()
+        logout_future_raises_exception.set_exception(ProtonAPINotReachable("test"))
+        controller_mock.logout.return_value = logout_future_raises_exception
+
+        menu = Menu(
+            controller=controller_mock,
+            main_window=Mock(),
+            overlay_widget=Mock()
+        )
+
+        menu.logout_button_click()
+
+        assert not menu.logout_enabled
+
+        process_gtk_events()
+
+        controller_mock.logout.assert_called_once()
+        assert menu.logout_enabled
+
+    def test_logout_menu_entry_displays_unable_to_logout_dialog_after_failed_logout_fails(self):
+        main_window_mock = Mock()
+        controller_mock = Mock()
+        controller_mock.get_settings.return_value.killswitch = KillSwitchSettingEnum.OFF
+        controller_mock.is_connection_active = False
+        logout_future_raises_exception = Future()
+        logout_future_raises_exception.set_exception(ProtonAPINotReachable("test"))
+        controller_mock.logout.return_value = logout_future_raises_exception
+
+        menu = Menu(
+            controller=controller_mock,
+            main_window=main_window_mock,
+            overlay_widget=Mock()
+        )
+        menu.logout_button_click()
+
+        process_gtk_events()
+
+        controller_mock.logout.assert_called_once()
+        main_window_mock.main_widget.notifications.show_error_message.assert_called_once_with(
+            menu.UNABLE_TO_LOGOUT_MESSAGE
+        )
+
+    @patch("proton.vpn.app.gtk.widgets.headerbar.menu.menu.ConfirmationDialog")
+    def test_logout_menu_entry_logs_user_out_when_clicked_while_connected_to_vpn_only_after_user_dialog_confirmation(
+            self, confirmation_dialog_patch
+    ):
+        controller_mock = Mock()
+        controller_mock.get_settings.return_value.killswitch = KillSwitchSettingEnum.OFF
+        logout_future = Future()
+        logout_future.set_result(None)
+
+        controller_mock.logout.return_value = logout_future
+        controller_mock.connection_disconnected = False
+
+        confirmation_dialog_mock = Mock()
+        confirmation_dialog_patch.return_value = confirmation_dialog_mock
+
+        menu = Menu(
+            controller=controller_mock,
+            main_window=Mock(),
+            overlay_widget=Mock()
+        )
+
+        menu.logout_button_click()
+
+        process_gtk_events()
+
+        confirmation_dialog_mock.present.assert_called_once()
+
+        assert confirmation_dialog_mock.connect.call_count == 1
+        assert confirmation_dialog_mock.connect.call_args[0][0] == "response"
+        # Simulate user clicking "Yes" in the confirmation dialog
+        confirmation_dialog_mock.connect.call_args[0][1](confirmation_dialog_mock, Gtk.ResponseType.YES.real)
+
+        confirmation_dialog_mock.destroy.assert_called_once()
+        controller_mock.logout.assert_called_once()
+
+    @patch("proton.vpn.app.gtk.widgets.headerbar.menu.menu.ConfirmationDialog")
+    def test_logout_menu_entry_does_not_log_user_out_when_clicked_while_connected_to_vpn_if_user_cancels_confirmation_dialog(
+            self, confirmation_dialog_patch
+    ):
+        controller_mock = Mock()
+        controller_mock.get_settings.return_value.killswitch = KillSwitchSettingEnum.OFF
+        logout_future = Future()
+        logout_future.set_result(None)
+
+        controller_mock.logout.return_value = logout_future
+        controller_mock.connection_disconnected = False
+
+        confirmation_dialog_mock = Mock()
+        confirmation_dialog_patch.return_value = confirmation_dialog_mock
+
+        menu = Menu(
+            controller=controller_mock,
+            main_window=Mock(),
+            overlay_widget=Mock()
+        )
+
+        menu.logout_button_click()
+
+        process_gtk_events()
+
+        confirmation_dialog_mock.present.assert_called_once()
+
+        assert confirmation_dialog_mock.connect.call_count == 1
+        assert confirmation_dialog_mock.connect.call_args[0][0] == "response"
+        # Simulate user clicking "No" in the confirmation dialog
+        confirmation_dialog_mock.connect.call_args[0][1](confirmation_dialog_mock, Gtk.ResponseType.NO.real)
+
+        confirmation_dialog_mock.destroy.assert_called_once()
+        assert not controller_mock.logout.call_count
+
+    @patch("proton.vpn.app.gtk.widgets.headerbar.menu.menu.ConfirmationDialog")
+    def test_logout_menu_entry_displays_message_when_clicked_while_connected_to_vpn_and_killswitch_is_enabled(
+        self, confirmation_dialog_patch
+    ):
+        controller_mock = Mock()
+        controller_mock.get_settings.return_value.killswitch = KillSwitchSettingEnum.ON
+        controller_mock.connection_disconnected = False
+
+        confirmation_dialog_mock = Mock()
+        confirmation_dialog_patch.return_value = confirmation_dialog_mock
+
+        menu = Menu(
+            controller=controller_mock,
+            main_window=Mock(),
+            overlay_widget=Mock()
+        )
+
+        menu.logout_button_click()
+
+        process_gtk_events()
+
+        confirmation_dialog_patch.assert_called_once_with(
+            menu.DISCONNECT_ON_LOGOUT_WITH_KILL_SWITCH_ENABLED_MESSAGE,
+            menu.DISCONNECT_TITLE
+        )
+
+    @patch("proton.vpn.app.gtk.widgets.headerbar.menu.menu.ConfirmationDialog")
+    def test_logout_menu_entry_displays_message_when_clicked_while_not_connected_to_vpn_and_permanent_killswitch_is_enabled(
+        self, confirmation_dialog_patch
+    ):
+        controller_mock = Mock()
+        controller_mock.get_settings.return_value.killswitch = KillSwitchSettingEnum.PERMANENT
+        controller_mock.connection_disconnected = True
+
+        confirmation_dialog_mock = Mock()
+        confirmation_dialog_mock.run.return_value = Gtk.ResponseType.NO.real
+        confirmation_dialog_patch.return_value = confirmation_dialog_mock
+
+        menu = Menu(
+            controller=controller_mock,
+            main_window=Mock(),
+            overlay_widget=Mock()
+        )
+
+        menu.logout_button_click()
+
+        process_gtk_events()
+
+        confirmation_dialog_patch.assert_called_once_with(
+            menu.LOGOUT_AND_KILL_SWITCH_ENABLED_MESSAGE,
+            menu.KILLSWITCH_ENABLED_TITLE
+        )
+
+    @patch("proton.vpn.app.gtk.widgets.headerbar.menu.menu.ConfirmationDialog")
+    @pytest.mark.parametrize("kill_switch_state", [KillSwitchSettingEnum.ON, KillSwitchSettingEnum.PERMANENT])
+    def test_logout_menu_entry_when_clicked_ensure_kill_switch_state_is_set_to_off_while_killswitch_is_enabled_and_logout_is_called(
+        self, confirmation_dialog_patch, kill_switch_state
+    ):
+        controller_mock = Mock()
+        future = Future()
+        future.set_result(True)
+        controller_mock.disable_killswitch.return_value = future
+        property_mock = PropertyMock(return_value=kill_switch_state)
+        type(controller_mock.get_settings.return_value).killswitch = property_mock
+        controller_mock.connection_disconnected = True
+
+        confirmation_dialog_mock = Mock()
+        confirmation_dialog_patch.return_value = confirmation_dialog_mock
+
+        menu = Menu(
+            controller=controller_mock,
+            main_window=Mock(),
+            overlay_widget=Mock()
+        )
+
+        menu.logout_button_click()
+
+        process_gtk_events()
+
+        if confirmation_dialog_mock.connect.called:
+            # Simulate user clicking "Yes" in the confirmation dialog
+            confirmation_dialog_mock.connect.call_args[0][1](confirmation_dialog_mock, Gtk.ResponseType.YES.real)
+            process_gtk_events()
+
+        assert property_mock.called
+        assert controller_mock.method_calls == [
+            call.get_settings(),
+            call.disable_killswitch(),
+            call.logout()
+        ]
+
+
+class TestQuitMenuEntry:
+
+    def test_quit_menu_entry_closes_app_window_when_clicked_while_not_connected_to_vpn(self):
+        main_window_mock = Mock()
+        controller_mock = Mock()
+        controller_mock.get_settings.return_value.killswitch = KillSwitchSettingEnum.OFF
+        controller_mock.connection_disconnected = True
+
+        menu = Menu(
+            controller=controller_mock,
+            main_window=main_window_mock,
+            overlay_widget=Mock()
+        )
+
+        menu.quit_button_click()
+
+        process_gtk_events()
+
+        main_window_mock.quit.assert_called_once()
+
+    @patch("proton.vpn.app.gtk.widgets.headerbar.menu.menu.ConfirmationDialog")
+    def test_quit_menu_entry_closes_app_window_when_clicked_only_after_user_dialog_confirmation_while_connected_to_vpn(
+            self, confirmation_dialog_patch
+    ):
+        main_window_mock = Mock()
+        controller_mock = Mock()
+        controller_mock.get_settings.return_value.killswitch = KillSwitchSettingEnum.OFF
+        controller_mock.connection_disconnected = False
+
+        quit_dialog_mock = Mock()
+        quit_dialog_mock.run.return_value = Gtk.ResponseType.YES.real
+        confirmation_dialog_patch.return_value = quit_dialog_mock
+
+        menu = Menu(
+            controller=controller_mock,
+            main_window=main_window_mock,
+            overlay_widget=Mock()
+        )
+
+        menu.quit_button_click()
+        menu.status_update(Disconnected())
+        main_window_mock.quit.assert_called_once()
+
+    @patch("proton.vpn.app.gtk.widgets.headerbar.menu.menu.ConfirmationDialog")
+    def test_quit_menu_entry_does_nothing_when_clicked_if_user_cancels_confirmation_dialog_while_connected_to_vpn(
+            self, confirmation_dialog_patch
+    ):
+        main_window_mock = Mock()
+        controller_mock = Mock()
+        controller_mock.get_settings.return_value.killswitch = KillSwitchSettingEnum.OFF
+        controller_mock.connection_disconnected = False
+
+        quit_dialog_mock = Mock()
+        quit_dialog_mock.run.return_value = Gtk.ResponseType.NO.real
+        confirmation_dialog_patch.return_value = quit_dialog_mock
+
+        menu = Menu(
+            controller=controller_mock,
+            main_window=main_window_mock,
+            overlay_widget=Mock()
+        )
+
+        menu.quit_button_click()
+        main_window_mock.quit.assert_not_called()
+
+    @patch("proton.vpn.app.gtk.widgets.headerbar.menu.menu.ConfirmationDialog")
+    def test_quit_menu_entry_displays_message_when_clicked_while_connected_to_vpn(
+        self, confirmation_dialog_patch
+    ):
+        controller_mock = Mock()
+        controller_mock.get_settings.return_value.killswitch = KillSwitchSettingEnum.OFF
+        controller_mock.connection_disconnected = False
+
+        confirmation_dialog_mock = Mock()
+        confirmation_dialog_mock.run.return_value = Gtk.ResponseType.NO.real
+        confirmation_dialog_patch.return_value = confirmation_dialog_mock
+
+        menu = Menu(
+            controller=controller_mock,
+            main_window=Mock(),
+            overlay_widget=Mock()
+        )
+
+        menu.quit_button_click()
+
+        process_gtk_events()
+
+        confirmation_dialog_patch.assert_called_once_with(menu.DISCONNECT_ON_QUIT_MESSAGE, menu.DISCONNECT_TITLE)
+
+    @patch("proton.vpn.app.gtk.widgets.headerbar.menu.menu.ConfirmationDialog")
+    def test_quit_menu_entry_displays_message_when_clicked_while_connected_to_vpn_and_permanent_killswitch_is_enabled(
+        self, confirmation_dialog_patch
+    ):
+        controller_mock = Mock()
+        controller_mock.get_settings.return_value.killswitch = KillSwitchSettingEnum.PERMANENT
+        controller_mock.connection_disconnected = False
+
+        quit_dialog_mock = Mock()
+        quit_dialog_mock.run.return_value = Gtk.ResponseType.NO.real
+        confirmation_dialog_patch.return_value = quit_dialog_mock
+
+        menu = Menu(
+            controller=controller_mock,
+            main_window=Mock(),
+            overlay_widget=Mock()
+        )
+
+        menu.quit_button_click()
+
+        process_gtk_events()
+
+        confirmation_dialog_patch.assert_called_once_with(
+            menu.DISCONNECT_ON_QUIT_WITH_PERMANENT_KILL_SWITCH_ENABLED_MESSAGE,
+            menu.DISCONNECT_TITLE
+        )
+
+    @patch("proton.vpn.app.gtk.widgets.headerbar.menu.menu.ConfirmationDialog")
+    def test_quit_menu_entry_when_clicked_ensure_kill_switch_state_stays_in_the_same_state_and_ensure_quit_is_called(
+        self, confirmation_dialog_patch
+    ):
+        main_window_mock = Mock()
+        controller_mock = Mock()
+        future = Future()
+        future.set_result(True)
+        controller_mock.disable_killswitch.return_value = future
+        property_mock = PropertyMock(return_value=KillSwitchSettingEnum.ON)
+        type(controller_mock.get_settings.return_value).killswitch = property_mock
+        controller_mock.connection_disconnected = True
+
+        confirmation_dialog_mock = Mock()
+        confirmation_dialog_mock.run.return_value = Gtk.ResponseType.YES.real
+        confirmation_dialog_patch.return_value = confirmation_dialog_mock
+
+        menu = Menu(
+            controller=controller_mock,
+            main_window=main_window_mock,
+            overlay_widget=Mock()
+        )
+
+        menu.quit_button_click()
+
+        process_gtk_events()
+
+        assert property_mock.called
+        controller_mock.disable_killswitch.assert_not_called()
+        main_window_mock.quit.assert_called_once()
