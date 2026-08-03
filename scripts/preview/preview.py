@@ -176,6 +176,7 @@ class PreviewApp:
         self._free_tier = False
 
         self.window = Gtk.Window()
+        self.window.set_name("main-window")
         self.window.set_title("Proton VPN GTK — UI preview")
         # Note: the top debug control bar (~696px wide) sets the preview
         # window's minimum width; the real app has no such controls.

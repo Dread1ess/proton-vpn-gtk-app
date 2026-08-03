@@ -1,7 +1,6 @@
 #vpn-connection-status-widget {
-    margin-top: 8px;
-    margin-bottom: 8px;
-    padding-left: 8px;
+    margin: 0;
+    padding: 0;
 }
 
 #vpn-connection-status-widget #status-title-row {

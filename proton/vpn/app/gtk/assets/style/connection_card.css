@@ -1,0 +1,15 @@
+/* App background: the default GTK dark theme background is a neutral grey,
+   the Proton dark theme wants its own near-black background everywhere. */
+#main-window {
+    background-color: @background-norm;
+}
+
+/* Connection card: groups the connection status and the quick connect button
+   into a single card, matching the official Proton VPN apps. */
+#connection-card {
+    margin: 4px 0 10px 0;
+    padding: 16px 8px 12px 8px;
+    background-color: @background-weak;
+    border: 1px solid @border-weak;
+    border-radius: 16px;
+}

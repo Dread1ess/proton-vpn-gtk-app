@@ -84,12 +84,20 @@ class VPNWidget(Gtk.Box):
         self.connection_status_widget = VPNConnectionStatusWidget(
             controller, notifications
         )
-        self.append(self.connection_status_widget)
 
         self._connected_signals: list[tuple[int, Gtk.Widget]] = []
 
         self.quick_connect_widget = QuickConnectWidget(self._controller)
-        self.append(self.quick_connect_widget)
+
+        # Connection card groups the status and the quick connect button into a
+        # single visual unit.
+        self._connection_card = Gtk.Box(
+            orientation=Gtk.Orientation.VERTICAL, spacing=10
+        )
+        self._connection_card.set_name("connection-card")
+        self._connection_card.append(self.connection_status_widget)
+        self._connection_card.append(self.quick_connect_widget)
+        self.append(self._connection_card)
 
         self.search_widget = SearchEntry()
         self.server_list_widget = ServerListWidget(self._controller, self.search_widget)
@@ -134,7 +142,7 @@ class VPNWidget(Gtk.Box):
             ),
             self.search_results_widget
         ))
-        self.insert_child_after(self.search_widget, self.quick_connect_widget)
+        self.insert_child_after(self.search_widget, self._connection_card)
         self.insert_child_after(revealer, self.search_widget)
 
         self._state_subscribers = [
