@@ -1,3 +1,5 @@
+![After](Screenshot_20260803_124033.png)
+
 # Proton VPN GTK app
 
 Copyright (c) 2023 Proton AG
