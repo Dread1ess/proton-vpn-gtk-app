@@ -1,0 +1,328 @@
+/* Settings window — matches the app's dark theme and card aesthetic. */
+#settings-window {
+    background-color: @background-norm;
+}
+
+#settings-window headerbar {
+    background-color: @background-norm;
+    border: none;
+    box-shadow: none;
+}
+
+/* Category container — groups related settings with a header. */
+.setting-category {
+    margin: 16px 16px 8px 16px;
+    padding: 0;
+    background-color: transparent;
+}
+
+.setting-category:first-child {
+    margin-top: 8px;
+}
+
+.setting-category:last-child {
+    margin-bottom: 16px;
+}
+
+/* Category header — section title with Proton branding. */
+.setting-category .heading {
+    font-size: 0.85em;
+    font-weight: 600;
+    color: @primary;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 12px;
+    padding-left: 4px;
+}
+
+/* Setting row — card with consistent spacing and Proton colors. */
+.setting-item {
+    background-color: @background-weak;
+    border: 1px solid @border-weak;
+    border-radius: 12px;
+    padding: 16px;
+    margin: 4px 16px;
+    box-shadow: none;
+}
+
+/* Title + description layout inside setting-item is a Gtk.Grid (common.py).
+   Column 0 = label (SettingName), Column 1 = control (switch/combo/entry/button).
+   We add spacing via CSS margins/padding since Python sets column_spacing(100). */
+.setting-item > * {
+    /* reset any inherited margins */
+    margin: 0;
+}
+
+/* Setting name label */
+.setting-item .setting-name,
+.setting-item label:not(.dim-label):not(.beta-tag):not(.upgrade-tag) {
+    color: @text-norm;
+    font-weight: 500;
+    font-size: 0.95em;
+}
+
+/* Setting description */
+.setting-item .dim-label {
+    color: @text-weak;
+    font-size: 0.85em;
+    line-height: 1.4;
+    margin-top: 6px;
+}
+
+/* Upgrade pill — Proton primary color. */
+.upgrade-tag {
+    background-color: @primary;
+    background-image: none;
+    border: none;
+    border-radius: 20px;
+    color: @text-invert;
+    font-weight: 600;
+    font-size: 0.8em;
+    padding: 4px 12px;
+    min-height: 28px;
+    box-shadow: 0 2px 4px rgba(138, 110, 255, 0.3);
+}
+
+.upgrade-tag:hover {
+    background-color: @interaction-norm-hover;
+    box-shadow: 0 3px 6px rgba(138, 110, 255, 0.4);
+}
+
+.upgrade-tag:active {
+    background-color: @interaction-norm-active;
+}
+
+/* Beta tag — subtle primary outline. */
+.beta-tag {
+    background-color: transparent;
+    background-image: none;
+    border: 1px solid @primary;
+    border-radius: 16px;
+    color: @primary;
+    font-weight: 600;
+    font-size: 0.75em;
+    padding: 2px 10px;
+    min-height: 24px;
+}
+
+.beta-tag:hover {
+    background-color: @primary;
+    color: @text-invert;
+}
+
+/* Switch styling — consistent with Proton design. */
+.setting-item switch {
+    background-color: @field-norm;
+    background-image: image(@field-norm);
+    border-color: @field-norm;
+    border-radius: 999px;
+}
+
+.setting-item switch:checked {
+    background-color: @primary;
+    background-image: image(@primary);
+    border-color: @primary;
+}
+
+.setting-item switch:hover {
+    background-color: @field-hover;
+}
+
+.setting-item switch:checked:hover {
+    background-color: @interaction-norm-hover;
+}
+
+/* ComboBox styling. */
+.setting-item combobox,
+.setting-item combo-box-text {
+    background-color: @field-norm;
+    background-image: image(@field-norm);
+    border: 1px solid @border-norm;
+    border-radius: 8px;
+    color: @text-norm;
+    padding: 8px 12px;
+    min-height: 36px;
+}
+
+.setting-item combobox:hover,
+.setting-item combo-box-text:hover {
+    border-color: @interaction-norm;
+}
+
+.setting-item combobox:focus,
+.setting-item combo-box-text:focus {
+    border-color: @interaction-norm;
+    box-shadow: none;
+}
+
+/* Entry styling. */
+.setting-item entry {
+    background-color: @field-norm;
+    background-image: image(@field-norm);
+    border: 1px solid @border-norm;
+    border-radius: 8px;
+    color: @text-norm;
+    padding: 8px 12px;
+    min-height: 36px;
+}
+
+.setting-item entry:focus {
+    border-color: @interaction-norm;
+    box-shadow: none;
+}
+
+/* Custom button in setting row. */
+.setting-item button:not(.upgrade-tag) {
+    background-color: @field-norm;
+    background-image: image(@field-norm);
+    border: 1px solid @border-norm;
+    border-radius: 8px;
+    color: @text-norm;
+    padding: 8px 16px;
+    min-height: 36px;
+}
+
+.setting-item button:not(.upgrade-tag):hover {
+    background-color: @field-hover;
+    border-color: @interaction-norm;
+}
+
+/* Revealer content — consistent card styling for expanded sections. */
+.revealer-content,
+.custom-dns-revealer {
+    background-color: @background-norm;
+    border: 1px solid @border-weak;
+    border-radius: 10px;
+    padding: 16px;
+    margin-top: 12px;
+}
+
+/* Custom DNS specific. */
+#custom-dns-manager,
+.custom-dns-revealer {
+    background-color: @background-norm;
+    border: 1px solid @border-weak;
+    border-radius: 10px;
+    padding: 16px;
+    margin-top: 12px;
+}
+
+#custom-dns-manager entry {
+    background-color: @field-norm;
+    border: 1px solid @border-norm;
+    border-radius: 8px;
+}
+
+#custom-dns-manager button {
+    background-color: @field-norm;
+    border: 1px solid @border-norm;
+    border-radius: 8px;
+}
+
+#custom-dns-manager .signal-danger {
+    color: @signal-danger;
+    font-size: 0.85em;
+    margin-top: 8px;
+}
+
+/* Kill switch radio rows. */
+#kill-switch-revealer > box > grid {
+    margin-bottom: 8px;
+}
+
+#kill-switch-revealer .setting-name {
+    font-weight: 500;
+}
+
+/* Split tunneling. */
+#split-tunneling-app-based-settings {
+    background-color: @background-weak;
+    border: 1px solid @border-weak;
+    border-radius: 12px;
+    padding: 20px;
+    margin: 8px 16px;
+}
+
+#split-tunneling-app-selection-window {
+    background-color: @background-norm;
+}
+
+#split-tunneling-app-selection-window viewport {
+    background-color: @background-norm;
+    border: 1px solid @border-weak;
+    border-radius: 12px;
+    margin: 16px;
+}
+
+#split-tunneling-app-done-button,
+#split-tunneling-app-add-button {
+    border-radius: 8px;
+}
+
+/* Selected app list. */
+#selected-app-list {
+    background-color: @background-norm;
+    border: 1px solid @border-weak;
+    border-radius: 10px;
+    padding: 12px;
+}
+
+#selected-app-list > grid {
+    background-color: @background-weak;
+    border: 1px solid @border-weak;
+    border-radius: 8px;
+    padding: 10px;
+    margin-bottom: 8px;
+}
+
+/* Dialogs — consistent card look. */
+#early-access-dialog,
+#split-tunneling-app-selection-window,
+#bug-report-dialog,
+#about-dialog,
+#release-notes-dialog,
+#confirmation-dialog {
+    background-color: @background-norm;
+    border: 1px solid @border-weak;
+    border-radius: 16px;
+}
+
+#early-access-dialog box,
+#confirmation-dialog box {
+    margin: 20px;
+}
+
+#early-access-dialog button,
+#confirmation-dialog button {
+    border-radius: 8px;
+    min-height: 36px;
+}
+
+/* Notification bar inside settings window. */
+#settings-window #notification-bar {
+    background-color: @signal-info;
+    border-radius: 8px;
+    margin: 8px 16px;
+}
+
+/* Viewport frame for scrolled windows. */
+.viewport-frame {
+    background-color: transparent;
+    border: none;
+}
+
+/* Scrollbars in settings. */
+#settings-window scrollbar slider,
+#settings-window scrollbar slider:hover {
+    background-color: @border-norm;
+    border-radius: 4px;
+}
+
+/* Tooltip styling. */
+#settings-window tooltip {
+    background-color: @background-strong;
+    border: 1px solid @border-norm;
+    border-radius: 8px;
+    padding: 8px 12px;
+    color: @text-norm;
+}

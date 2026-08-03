@@ -67,6 +67,19 @@ logging.config(filename="vpn-preview")
 from proton.vpn.app.gtk import Gtk as _Gtk  # noqa: E402  (ensures app init runs)
 from proton.vpn.app.gtk.assets.style import STYLE_PATH  # noqa: E402
 from proton.vpn.app.gtk.widgets.vpn.vpn_widget import VPNWidget  # noqa: E402
+from proton.vpn.app.gtk.widgets.headerbar.menu.settings.settings_window import (  # noqa: E402
+    SettingsWindow,
+)
+from proton.vpn.app.gtk.settings_watchers import SettingsWatchers  # noqa: E402
+from proton.vpn.app.gtk.widgets.headerbar.menu.settings.feature_settings import (  # noqa: E402
+    FeatureSettings,
+)
+from proton.vpn.app.gtk.widgets.headerbar.menu.settings.early_access import (  # noqa: E402
+    EarlyAccessWidget,
+)
+from proton.vpn.app.gtk.widgets.headerbar.menu.settings.general_settings import (  # noqa: E402
+    GeneralSettings,
+)
 from proton.vpn.app.gtk.widgets.vpn.serverlist.city_view.favorites import FAVORITES_SETTING  # noqa: E402
 from proton.vpn.connection import events, states  # noqa: E402
 from proton.vpn.connection.states import ConnectionContext  # noqa: E402

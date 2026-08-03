@@ -89,6 +89,7 @@ class KillSwitchWidget(ConflictableToggleWidget, ReactiveSetting):  # noqa pylin
     def _build_revealer_container(self) -> Gtk.Box:
         # Add both containers that contain all children that are to be displayed in the revealer
         revealer_container = self.gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        revealer_container.add_css_class("revealer-content")
         revealer_container.set_spacing(10)
         revealer_container.append(self._build_standard_killswitch())
         revealer_container.append(self._build_advanced_killswitch())

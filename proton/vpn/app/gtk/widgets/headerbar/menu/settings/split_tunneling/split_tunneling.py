@@ -49,6 +49,7 @@ class SplitTunnelingSettings(Gtk.Box):
         gtk: Optional[ModuleType] = None,
     ):  # pylint: disable=too-many-arguments
         super().__init__(orientation=Gtk.Orientation.VERTICAL)
+        self.add_css_class("revealer-content")
         self._controller = controller
         self.gtk = gtk or Gtk
 

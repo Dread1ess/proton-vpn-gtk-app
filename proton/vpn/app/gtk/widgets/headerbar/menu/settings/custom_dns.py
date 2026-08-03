@@ -98,6 +98,7 @@ class CustomDNSManager(Gtk.Box):  # pylint: disable=too-few-public-methods
     ):
         super().__init__(orientation=Gtk.Orientation.VERTICAL)
         self.set_spacing(15)
+        self.add_css_class("custom-dns-revealer")
 
         self.gtk = gtk or Gtk
         self._controller = controller
