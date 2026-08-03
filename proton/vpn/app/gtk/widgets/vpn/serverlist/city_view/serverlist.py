@@ -35,6 +35,7 @@ from proton.vpn.session.servers import ServerList, TierEnum
 from proton.vpn.session.servers.server_list_fetcher import ServerListFetcher
 
 from proton.vpn.app.gtk.widgets.vpn.serverlist.city_view.country_row import CountryRow
+from proton.vpn.app.gtk.widgets.vpn.serverlist.city_view.favorites import load_favorites
 from proton.vpn.app.gtk.widgets.vpn.serverlist.city_view.server_list_header_row import (
     ServerListHeaderRow,
 )
@@ -133,14 +134,24 @@ class ServerListWidget(Gtk.ScrolledWindow):
 
     def _display_country_rows(self, server_list: ServerList):
         free_user = self._user_tier == TierEnum.FREE
+        favorites = load_favorites(self._controller)
         countries = server_list.group_by_country(
             group_by_location=True,
             include_free_servers=free_user
         )
         if free_user:
             # If the current user has a free account, sort the countries having
-            # free servers first.
-            countries.sort(key=lambda country: (0 if country.free else 1, country.name))
+            # free servers first, then favorites, then the remaining alphabetically.
+            countries.sort(key=lambda country: (
+                0 if country.free else 1,
+                0 if country.name in favorites else 1,
+                country.name
+            ))
+        else:
+            countries.sort(key=lambda country: (
+                0 if country.name in favorites else 1,
+                country.name
+            ))
 
         # Collect expanded states before refresh (keyed by country code and child group name)
         expanded_countries = {row.country_code.lower(): row.expanded for row in self.country_rows}
@@ -160,7 +171,7 @@ class ServerListWidget(Gtk.ScrolledWindow):
             expanded_groups = expanded_groups_per_country.get(country.code.lower())
             row.display(
                 self._controller, country, self._user_tier,
-                expanded=expanded, expanded_groups=expanded_groups
+                expanded=expanded, expanded_groups=expanded_groups, favorites=favorites
             )
 
         sync_rows_with_model_items(

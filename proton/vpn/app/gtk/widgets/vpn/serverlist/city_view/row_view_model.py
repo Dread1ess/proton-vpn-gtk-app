@@ -51,6 +51,8 @@ class RowViewModel:  # pylint: disable=too-many-instance-attributes
     secure_core_countries: Optional[Tuple[str, str]] = None  # (entry_name, exit_name)
     icon_factory: Optional[Callable[[], Gtk.Widget]] = None
     toggle_button_tooltips: Optional[Tuple[str, str]] = None
+    favorite: bool = False
+    on_favorite_toggle: Optional[Callable[[], bool]] = None
 
     def __post_init__(self):
         if self.toggable and self.toggle_button_tooltips is None:

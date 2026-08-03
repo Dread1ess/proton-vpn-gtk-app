@@ -125,6 +125,16 @@ class RowContent(Gtk.Box):  # pylint: disable=too-many-instance-attributes
         self.under_maintenance_icon.set_visible(False)
         self.append(self.under_maintenance_icon)
 
+        # --- Favorite (star) toggle button ---
+        self._favorite_img = Gtk.Image.new_from_icon_name("non-starred-symbolic")
+        self._favorite_img.set_pixel_size(14)
+        self.favorite_button = Gtk.Button()
+        self.favorite_button.add_css_class("favorite-button")
+        self.favorite_button.add_css_class("flat")
+        self.favorite_button.set_child(self._favorite_img)
+        self._set_favorite_button_visible(False)
+        self.append(self.favorite_button)
+
         # --- Toggle button (outside stack, always at the end) ---
         self._collapsed_img = Gtk.Image.new_from_icon_name("pan-down-symbolic")
         self._expanded_img = Gtk.Image.new_from_icon_name("pan-up-symbolic")
@@ -186,6 +196,18 @@ class RowContent(Gtk.Box):  # pylint: disable=too-many-instance-attributes
             self.expanded = False
         else:
             self._set_toggle_button_visible(False)
+
+        if row_data.on_favorite_toggle is not None:
+            self._set_favorite_state(row_data.favorite)
+            self._set_favorite_button_visible(True)
+            signal_id = safe_signal_connect(
+                self.favorite_button,
+                "clicked",
+                self._on_favorite_button_clicked
+            )
+            self._connected_signals.append((signal_id, self.favorite_button))
+        else:
+            self._set_favorite_button_visible(False)
 
     def _show_under_maintenance_icon(self):
         self.under_maintenance_icon.set_visible(True)
@@ -315,6 +337,35 @@ class RowContent(Gtk.Box):  # pylint: disable=too-many-instance-attributes
         self.toggle_button.set_opacity(1 if visible else 0)
         self.toggle_button.set_sensitive(visible)
 
+    def set_favorite_state(self, is_favorite: bool):
+        """Updates the favorite visual without persisting any change."""
+        if self._row_data is not None:
+            self._row_data.favorite = is_favorite
+        self._set_favorite_state(is_favorite)
+
+    def _set_favorite_state(self, is_favorite: bool):
+        self._favorite_img.set_from_icon_name(
+            "starred-symbolic" if is_favorite else "non-starred-symbolic"
+        )
+        self.favorite_button.set_tooltip_text(
+            "Remove from favorites" if is_favorite else "Add to favorites"
+        )
+        if is_favorite:
+            self.favorite_button.add_css_class("is-favorite")
+        else:
+            self.favorite_button.remove_css_class("is-favorite")
+
+    def _set_favorite_button_visible(self, visible: bool):
+        """Show or hide the favorite button while keeping it in the layout."""
+        self.favorite_button.set_opacity(1 if visible else 0)
+        self.favorite_button.set_sensitive(visible)
+
+    def _on_favorite_button_clicked(self, _favorite_button: Gtk.Button):
+        if self._row_data is None or self._row_data.on_favorite_toggle is None:
+            return
+        new_state = self._row_data.on_favorite_toggle()
+        self._set_favorite_state(new_state)
+
     def _on_toggle_button_clicked(self, _toggle_button: Gtk.Button):
         self.expanded = not self.expanded
         self.emit("toggle-children")
@@ -366,6 +417,7 @@ class RowContent(Gtk.Box):  # pylint: disable=too-many-instance-attributes
     def reset(self):
         """Resets the state of this row content."""
         self.remove_css_class("dimmed")
+        self._set_favorite_button_visible(False)
         for signal_id, widget in self._connected_signals:
             widget.disconnect(signal_id)
         self._connected_signals.clear()

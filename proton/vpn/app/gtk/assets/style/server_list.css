@@ -114,3 +114,28 @@
 #server-list-widget #server-list-header-row {
     border-spacing: 10px;
 }
+
+#server-list-widget .favorite-button {
+    padding: 4px;
+    min-width: 22px;
+    min-height: 22px;
+    border-radius: 999px;
+    background-color: transparent;
+    background-image: none;
+    box-shadow: none;
+    color: @text-hint;
+}
+
+#server-list-widget .favorite-button image {
+    color: inherit;
+}
+
+#server-list-widget .favorite-button:hover {
+    background-color: @interaction-default-hover;
+    background-image: image(@interaction-default-hover);
+    color: @signal-warning;
+}
+
+#server-list-widget .favorite-button.is-favorite {
+    color: @signal-warning;
+}

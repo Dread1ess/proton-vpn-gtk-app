@@ -67,6 +67,7 @@ logging.config(filename="vpn-preview")
 from proton.vpn.app.gtk import Gtk as _Gtk  # noqa: E402  (ensures app init runs)
 from proton.vpn.app.gtk.assets.style import STYLE_PATH  # noqa: E402
 from proton.vpn.app.gtk.widgets.vpn.vpn_widget import VPNWidget  # noqa: E402
+from proton.vpn.app.gtk.widgets.vpn.serverlist.city_view.favorites import FAVORITES_SETTING  # noqa: E402
 from proton.vpn.connection import events, states  # noqa: E402
 from proton.vpn.connection.states import ConnectionContext  # noqa: E402
 from proton.vpn.session.servers import TierEnum  # noqa: E402
@@ -115,6 +116,7 @@ class MockController:
         self.reconnector = Mock()
         self.reconnector.enable = Mock()
         self.reconnector.disable = Mock()
+        self._favorites = {"Japan"}
 
     @property
     def server_list(self):
@@ -144,10 +146,14 @@ class MockController:
     def set_server_loads_updated_callback(self, _callback):
         return None
 
-    def get_setting_attr(self, _name):
+    def get_setting_attr(self, name):
+        if name == FAVORITES_SETTING:
+            return sorted(self._favorites)
         return False
 
-    def save_setting_attr(self, _name, _value):
+    def save_setting_attr(self, name, value):
+        if name == FAVORITES_SETTING:
+            self._favorites = set(value)
         return done_future()
 
     def connect_to_fastest_server(self):

@@ -136,3 +136,41 @@ def test_row_content_displays_server_features():
     assert SmartRoutingIcon in icon_types
     assert P2PIcon in icon_types
     assert TORIcon in icon_types
+
+
+def test_row_content_hides_favorite_button_when_no_favorite_callback():
+    row_content = RowContent()
+    row_content.display(row_data=_row_data())
+    assert row_content.favorite_button.get_opacity() == 0
+    assert not row_content.favorite_button.get_sensitive()
+
+
+def test_row_content_shows_favorite_button_when_favorite_callback_is_set():
+    row_content = RowContent()
+    row_data = _row_data(favorite=True, on_favorite_toggle=Mock(return_value=False))
+    row_content.display(row_data=row_data)
+    assert row_content.favorite_button.get_opacity() == 1
+    assert row_content.favorite_button.get_sensitive()
+    assert row_content.favorite_button.get_child().get_icon_name() == "starred-symbolic"
+
+
+def test_row_content_favorite_button_click_toggles_and_updates_icon():
+    on_favorite_toggle = Mock(return_value=True)
+    row_content = RowContent()
+    row_content.display(row_data=_row_data(favorite=False, on_favorite_toggle=on_favorite_toggle))
+
+    row_content.favorite_button.emit("clicked")
+
+    on_favorite_toggle.assert_called_once()
+    assert row_content.favorite_button.get_child().get_icon_name() == "starred-symbolic"
+
+
+def test_row_content_set_favorite_state_updates_icon_without_calling_callback():
+    on_favorite_toggle = Mock()
+    row_content = RowContent()
+    row_content.display(row_data=_row_data(favorite=False, on_favorite_toggle=on_favorite_toggle))
+
+    row_content.set_favorite_state(True)
+
+    on_favorite_toggle.assert_not_called()
+    assert row_content.favorite_button.get_child().get_icon_name() == "starred-symbolic"

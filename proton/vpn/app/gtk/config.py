@@ -28,6 +28,7 @@ from proton.utils.environment import VPNExecutionEnvironment
 
 DEFAULT_APP_CONFIG = {
     "tray_pinned_servers": [],
+    "favorite_servers": [],
     "connect_at_app_startup": None,
     "start_app_minimized": False
 }
@@ -43,6 +44,7 @@ class AppConfig:
     """Contains configurations that are app specific.
     """
     tray_pinned_servers: list
+    favorite_servers: list
     connect_at_app_startup: Optional[str]
     start_app_minimized: bool
 
@@ -53,6 +55,7 @@ class AppConfig:
 
         return AppConfig(
             tray_pinned_servers=data.get("tray_pinned_servers", []),
+            favorite_servers=data.get("favorite_servers", []),
             connect_at_app_startup=(
                 connect_at_app_startup.upper()
                 if connect_at_app_startup
@@ -70,6 +73,7 @@ class AppConfig:
         """Creates and returns `AppConfig` from default app configurations."""
         return AppConfig(
             tray_pinned_servers=DEFAULT_APP_CONFIG["tray_pinned_servers"],
+            favorite_servers=DEFAULT_APP_CONFIG["favorite_servers"],
             connect_at_app_startup=DEFAULT_APP_CONFIG["connect_at_app_startup"],
             start_app_minimized=DEFAULT_APP_CONFIG["start_app_minimized"]
         )

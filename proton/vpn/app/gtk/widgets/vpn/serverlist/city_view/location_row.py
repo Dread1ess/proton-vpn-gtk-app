@@ -31,6 +31,7 @@ from proton.vpn.session.servers import Location, TierEnum
 from proton.vpn.app.gtk import Gtk
 from proton.vpn.app.gtk.controller import Controller
 from proton.vpn.app.gtk.widgets.vpn.serverlist.city_view.expandable_row import ExpandableRow
+from proton.vpn.app.gtk.widgets.vpn.serverlist.city_view.favorites import toggle_favorite
 from proton.vpn.app.gtk.widgets.vpn.serverlist.city_view.row_content import RowContent
 from proton.vpn.app.gtk.widgets.vpn.serverlist.city_view.row_view_model import RowViewModel
 from proton.vpn.app.gtk.widgets.vpn.serverlist.city_view.utils import (
@@ -54,11 +55,12 @@ class LocationRow(Gtk.Box):
         )
         self.append(self._expandable_row)
         self._server_rows: List[RowContent] = []
+        self._favorites: set = set()
 
     # pylint: disable=too-many-arguments
     def display(
         self, controller: Controller, location: Location, user_tier: int,
-        expanded: bool = False
+        expanded: bool = False, favorites: Optional[set] = None
     ):
         """Displays the location row according to the specified parameters.
 
@@ -67,11 +69,13 @@ class LocationRow(Gtk.Box):
             location: The location to display
             user_tier: The user's tier level
             expanded: Whether the location row should be expanded (defaults to False)
+            favorites: Set of favorited item names
         """
         self.reset(keep_server_rows=expanded)
         self._controller = controller
         self._location = location
         self._user_tier = user_tier
+        self._favorites = set(favorites or set())
         self._expandable_row.connect_toggle()
         upgrade_required = user_tier == TierEnum.FREE and not location.free
 
@@ -139,8 +143,12 @@ class LocationRow(Gtk.Box):
         else:
             servers = chain(self._location.paid_servers, self._location.free_servers)
 
+        # Move favorited servers to the top, keeping the tier ordering stable.
+        servers = sorted(servers, key=lambda server: 0 if server.name in self._favorites else 1)
+
         # Capture controller directly to avoid closing over `self` in on_connect
         controller = self._controller
+        favorites = self._favorites
 
         # pylint: disable=duplicate-code
         def display_server_row(server_row, server):
@@ -165,6 +173,8 @@ class LocationRow(Gtk.Box):
                     if upgrade_required else
                     f"Connect to {server.name}"
                 ),
+                favorite=server.name in favorites,
+                on_favorite_toggle=lambda: toggle_favorite(controller, server.name),
             )
             server_row.display(row_data)
 

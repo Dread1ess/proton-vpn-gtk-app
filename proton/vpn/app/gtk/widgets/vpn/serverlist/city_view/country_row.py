@@ -28,6 +28,7 @@ from typing import List, Optional
 from proton.vpn.session.servers import Country, Location, TierEnum
 from proton.vpn.app.gtk import Gtk
 from proton.vpn.app.gtk.controller import Controller
+from proton.vpn.app.gtk.widgets.vpn.serverlist.city_view.favorites import toggle_favorite
 from proton.vpn.app.gtk.widgets.vpn.serverlist.city_view.location_row import LocationRow
 from proton.vpn.app.gtk.widgets.vpn.serverlist.city_view.expandable_row import ExpandableRow
 from proton.vpn.app.gtk.widgets.vpn.serverlist.city_view.row_view_model import RowViewModel
@@ -62,11 +63,13 @@ class CountryRow(Gtk.Box):
 
         self._location_rows: List[LocationRow] = []
         self._secure_core_row: Optional[SecureCoreRow] = None
+        self._favorites: set = set()
 
     # pylint: disable=too-many-arguments
     def display(
         self, controller: Controller, country: Country, user_tier: int,
-        expanded: bool = False, expanded_groups: Optional[set[str]] = None
+        expanded: bool = False, expanded_groups: Optional[set[str]] = None,
+        favorites: Optional[set] = None
     ):
         """Displays the country row according to the specified parameters.
 
@@ -77,6 +80,7 @@ class CountryRow(Gtk.Box):
             expanded: Whether the country should be expanded (defaults to False)
             expanded_groups: Optional set of child group labels (lowercase)
                 that should be expanded
+            favorites: Set of favorited item names
         """
         expanded_groups = expanded_groups or set()
         self.reset(keep_location_rows=expanded)
@@ -84,6 +88,7 @@ class CountryRow(Gtk.Box):
         self._country = country
         self._user_tier = user_tier
         self._expanded_groups = expanded_groups
+        self._favorites = set(favorites or set())
         self._expandable_row.connect_toggle()
         upgrade_required = user_tier == TierEnum.FREE and not country.free
 
@@ -106,13 +111,15 @@ class CountryRow(Gtk.Box):
                 f"Show all locations from {country.name}",
                 f"Hide all locations from {country.name}",
             ),
+            favorite=country.name in self._favorites,
+            on_favorite_toggle=lambda: toggle_favorite(controller, country.name),
         )
         self._expandable_row.row_content.display(row_data)
         if expanded:
             self._expandable_row.set_expanded(True)
 
     def _on_expand(self) -> None:
-        self._add_location_rows(self._expanded_groups)
+        self._add_location_rows(self._expanded_groups, favorites=self._favorites)
         self._add_secure_core_row(expanded=SecureCoreRow.LABEL.lower() in self._expanded_groups)
 
     def _on_collapse(self) -> None:
@@ -207,13 +214,16 @@ class CountryRow(Gtk.Box):
             expanded=expanded
         )
 
-    def _add_location_rows(self, expanded_locations: Optional[set[str]] = None):
+    def _add_location_rows(self, expanded_locations: Optional[set[str]] = None,
+                           favorites: Optional[set] = None):
         """Adds location rows to the country row.
 
         Args:
             expanded_locations: Optional set of lowercase location names that should be expanded
+            favorites: Set of favorited item names
         """
         expanded_locations = expanded_locations or set()
+        favorites = set(favorites or set())
         runtime_assert(self._country is not None, "Country is not set")
 
         locations = self._country.locations
@@ -224,7 +234,8 @@ class CountryRow(Gtk.Box):
         def display_location_row(location_row, location):
             location_expanded = location.name.lower() in expanded_locations
             location_row.display(
-                self._controller, location, self._user_tier, expanded=location_expanded
+                self._controller, location, self._user_tier,
+                expanded=location_expanded, favorites=favorites
             )
 
         sync_rows_with_model_items(

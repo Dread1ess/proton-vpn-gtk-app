@@ -263,3 +263,24 @@ def test_server_list_widget_orders_country_rows_depending_on_user_tier(
 
     country_names = [country_row.country_name for country_row in servers_widget.country_rows]
     assert country_names == expected_country_names
+
+
+def test_server_list_widget_pins_favorite_countries_to_the_top():
+    mock_controller = Mock()
+    mock_controller.get_setting_attr.return_value = ["Argentina"]
+
+    servers_widget = ServerListWidget(controller=mock_controller)
+
+    servers_widget.display(user_tier=PLUS_TIER, server_list=unsorted_server_list)
+
+    country_names = [country_row.country_name for country_row in servers_widget.country_rows]
+    assert country_names == ["Argentina", "Japan"]
+
+
+def test_server_list_widget_reads_favorites_from_app_configuration():
+    mock_controller = Mock()
+    servers_widget = ServerListWidget(controller=mock_controller)
+
+    servers_widget.display(user_tier=PLUS_TIER, server_list=SERVER_LIST)
+
+    mock_controller.get_setting_attr.assert_any_call("app_configuration.favorite_servers")
