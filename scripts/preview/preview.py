@@ -171,7 +171,9 @@ class PreviewApp:
 
         self.window = Gtk.Window()
         self.window.set_title("Proton VPN GTK — UI preview")
-        self.window.set_default_size(560, 860)
+        # Note: the top debug control bar (~696px wide) sets the preview
+        # window's minimum width; the real app has no such controls.
+        self.window.set_default_size(720, 860)
         self.window.get_settings().props.gtk_application_prefer_dark_theme = True
 
         outer = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
@@ -202,16 +204,18 @@ class PreviewApp:
         state_button("Protected", 2)
         state_button("Error", 3)
 
-        tier_button = Gtk.Button(label="Toggle free/paid")
+        tier_button = Gtk.Button(label="Free/Paid")
         tier_button.connect("clicked", lambda _btn: self._toggle_tier())
         controls.append(tier_button)
 
-        reload_button = Gtk.Button(label="Reload CSS")
+        reload_button = Gtk.Button(label="Reload")
         reload_button.connect("clicked", lambda _btn: self._reload_css())
         controls.append(reload_button)
 
         self._state_label = Gtk.Label(label="")
         self._state_label.set_margin_start(12)
+        self._state_label.set_max_width_chars(18)
+        self._state_label.set_ellipsize(0)
         self._state_label.add_css_class("dim-label")
         controls.append(self._state_label)
 
@@ -246,21 +250,21 @@ class PreviewApp:
             state = states.Disconnected(
                 context=ConnectionContext(connection=None, reconnection=False)
             )
-            label = "Unprotected (disconnected)"
+            label = "Disconnected"
         elif idx == 1:
             state = states.Connecting(
                 context=ConnectionContext(
                     connection=FakeConnection("NL#2"), reconnection=False
                 )
             )
-            label = "Connecting..."
+            label = "Connecting NL#2"
         elif idx == 2:
             state = states.Connected(
                 context=ConnectionContext(
                     connection=FakeConnection("NL#2"), reconnection=False
                 )
             )
-            label = "Protected (connected to NL#2)"
+            label = "Protected NL#2"
         else:
             state = states.Error(
                 context=ConnectionContext(
@@ -268,7 +272,7 @@ class PreviewApp:
                     event=events.TunnelSetupFailed(),
                 )
             )
-            label = "Connection error"
+            label = "Error"
         self._state_label.set_text(label)
         self._vpn_widget.status_update(state)
 

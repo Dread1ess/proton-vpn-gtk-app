@@ -46,8 +46,8 @@ logger = logging.getLogger(__name__)
 class MainWindow(Gtk.ApplicationWindow):
     """Main window."""
 
-    WIDTH = 450
-    HEIGHT = 700
+    WIDTH = 560
+    HEIGHT = 820
 
     # pylint: disable=too-many-arguments
     def __init__(
@@ -132,8 +132,8 @@ class MainWindow(Gtk.ApplicationWindow):
         Handle delete-event, set window resize restrictions...
         """
         self.set_name("main-window")
-        self.set_resizable(False)
-        self.set_size_request(MainWindow.WIDTH, MainWindow.HEIGHT)
+        self.set_resizable(True)
+        self.set_default_size(MainWindow.WIDTH, MainWindow.HEIGHT)
 
     def configure_close_button_behaviour(self, tray_indicator_enabled: bool):
         """Configures the behaviour of the button to close the window
