@@ -1,0 +1,98 @@
+#quick-connect-widget {
+    padding-left: 8px;
+    padding-right: 8px;
+    margin-top: 4px;
+    margin-bottom: 8px;
+}
+
+/* Neutralize the placeholder stack used to hold both power buttons. */
+#quick-connect-widget stack {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+}
+
+#quick-connect-widget .power-button {
+    min-width: 136px;
+    min-height: 136px;
+    border-radius: 999px;
+    background-image: none;
+    box-shadow: none;
+    text-shadow: none;
+    padding: 0;
+    transition: 200ms ease-out;
+    border-width: 2px;
+}
+
+#quick-connect-widget .power-button image {
+    color: inherit;
+}
+
+/* Disconnected: quiet outline button. */
+#quick-connect-widget .power-button.power-off {
+    background-color: @background-weak;
+    border-color: @border-weak;
+    color: @text-weak;
+}
+
+#quick-connect-widget .power-button.power-off:hover {
+    background-color: @background-strong;
+    border-color: @interaction-norm;
+    color: @interaction-norm;
+}
+
+#quick-connect-widget .power-button.power-off:active {
+    background-color: @interaction-weak-active;
+    color: @text-norm;
+}
+
+#quick-connect-widget .power-button.power-off:focus-visible {
+    border-color: @interaction-norm;
+    color: @interaction-norm;
+}
+
+/* Connected: filled success button. */
+#quick-connect-widget .power-button.power-on {
+    background-color: @signal-success;
+    border-color: @signal-success;
+    color: @text-invert;
+}
+
+#quick-connect-widget .power-button.power-on:hover {
+    background-color: @signal-success-hover;
+    border-color: @signal-success-hover;
+}
+
+#quick-connect-widget .power-button.power-on:active {
+    background-color: @signal-success-active;
+    border-color: @signal-success-active;
+}
+
+/* Busy (connecting/disconnecting): accent background with spinner. */
+#quick-connect-widget .power-button.power-busy {
+    background-color: @interaction-norm;
+    border-color: @interaction-norm;
+    color: @text-norm;
+}
+
+#quick-connect-widget .power-button.power-busy:hover {
+    background-color: @interaction-norm-hover;
+    border-color: @interaction-norm-hover;
+}
+
+/* Error: filled danger button. */
+#quick-connect-widget .power-button.power-error {
+    background-color: @signal-danger;
+    border-color: @signal-danger;
+    color: @text-invert;
+}
+
+#quick-connect-widget .power-button.power-error:hover {
+    background-color: @signal-danger-hover;
+    border-color: @signal-danger-hover;
+}
+
+#quick-connect-widget #quick-connect-action-label {
+    margin-top: 10px;
+    color: @text-weak;
+}

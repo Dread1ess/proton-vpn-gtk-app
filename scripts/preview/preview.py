@@ -332,6 +332,7 @@ def _dump_geometry(preview: "PreviewApp"):
         ("connection-status", preview._vpn_widget.connection_status_widget),
         ("quick-connect", preview._vpn_widget.quick_connect_widget),
         ("connect-button", preview._vpn_widget.quick_connect_widget.connect_button),
+        ("connect-action-label", preview._vpn_widget.quick_connect_widget.action_label),
         ("search-entry", preview._vpn_widget.search_widget),
         ("server-list", preview._vpn_widget.server_list_widget),
     ]
@@ -398,9 +399,14 @@ def _run_auto_shots(preview: "PreviewApp", out_dir: str, display: str):
     time.sleep(0.5)
 
     def capture(name: str):
-        while context.pending():
-            context.iteration(False)
-        time.sleep(0.3)
+        # Give GTK a real frame to paint the current state before grabbing the
+        # X window, otherwise the snapshot can show a stale frame.
+        preview.window.queue_draw()
+        end = time.time() + 1.0
+        while time.time() < end:
+            while context.pending():
+                context.iteration(False)
+            time.sleep(0.03)
         target = str(out_dir / f"{name}.png")
         subprocess.run(
             ["import", "-window", hex(xid), target],

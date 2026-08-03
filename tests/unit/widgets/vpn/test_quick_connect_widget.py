@@ -27,14 +27,16 @@ from proton.vpn.connection.states import Disconnected, Connected, Connecting, Er
 from tests.unit.testing_utils import process_gtk_events, run_main_loop
 
 
-@pytest.mark.parametrize("connection_state, connect_button_visible, disconnect_button_visible, disconnect_button_label", [
-    (Disconnected(), True, False, None),
-    (Connecting(), False, True, "Cancel Connection"),
-    (Connected(), False, True, "Disconnect"),
-    (Error(), False, True, "Cancel Connection")
-])
+@pytest.mark.parametrize(
+    "connection_state, connect_button_visible, disconnect_button_visible, action_label", [
+        (Disconnected(), True, False, "Connect"),
+        (Connecting(), False, True, "Cancel Connection"),
+        (Connected(), False, True, "Disconnect"),
+        (Error(), False, True, "Cancel Connection")
+    ]
+)
 def test_quick_connect_widget_changes_button_according_to_connection_state_changes(
-        connection_state, connect_button_visible, disconnect_button_visible, disconnect_button_label
+        connection_state, connect_button_visible, disconnect_button_visible, action_label
 ):
     quick_connect_widget = QuickConnectWidget(controller=Mock())
     window = Gtk.Window()
@@ -50,8 +52,7 @@ def test_quick_connect_widget_changes_button_according_to_connection_state_chang
             assert quick_connect_widget.connection_state is connection_state
             assert quick_connect_widget.connect_button.get_visible() is connect_button_visible
             assert quick_connect_widget.disconnect_button.get_visible() is disconnect_button_visible
-            if disconnect_button_label:
-                assert quick_connect_widget.disconnect_button.get_label() == disconnect_button_label
+            assert quick_connect_widget.action_label.get_label() == action_label
         finally:
             main_loop.quit()
 
