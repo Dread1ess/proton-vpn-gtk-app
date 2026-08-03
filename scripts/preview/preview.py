@@ -58,7 +58,7 @@ gi.require_version("Gtk", "4.0")
 gi.require_version("Gdk", "4.0")
 gi.require_version("Notify", "0.7")
 
-from gi.repository import Gdk, GLib, Gtk  # noqa: E402
+from gi.repository import Gio, Gdk, GLib, Gtk  # noqa: E402
 
 from proton.vpn import logging  # noqa: E402
 
@@ -178,10 +178,12 @@ class PreviewApp:
         self.window = Gtk.Window()
         self.window.set_name("main-window")
         self.window.set_title("Proton VPN GTK — UI preview")
-        # Note: the top debug control bar (~696px wide) sets the preview
-        # window's minimum width; the real app has no such controls.
-        self.window.set_default_size(720, 860)
+        self.window.set_default_size(520, 820)
         self.window.get_settings().props.gtk_application_prefer_dark_theme = True
+
+        # The real app shows its headerbar (with the hamburger menu button)
+        # as a window titlebar, so the preview does too.
+        self.window.set_titlebar(self._build_headerbar())
 
         outer = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
         outer.append(self._build_controls())
@@ -192,41 +194,100 @@ class PreviewApp:
         self.window.set_child(outer)
         self._add_keyboard_shortcuts()
 
-    def _build_controls(self) -> Gtk.Box:
-        controls = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
-        controls.set_margin_top(6)
-        controls.set_margin_bottom(6)
-        controls.set_margin_start(6)
-        controls.set_margin_end(6)
+    def _build_headerbar(self) -> Gtk.HeaderBar:
+        """Builds a headerbar that mirrors the real app: a hamburger menu
+        button on the start side and the standard window controls."""
+        headerbar = Gtk.HeaderBar()
+        headerbar.set_decoration_layout("menu:minimize,close")
+        title = Gtk.Label(label="Proton VPN")
+        title.add_css_class("title")
+        headerbar.set_title_widget(title)
 
-        def state_button(label, index):
+        menu_button = Gtk.MenuButton()
+        menu_button.set_has_frame(False)
+        menu_button.set_icon_name("open-menu-symbolic")
+        menu_button.set_tooltip_text("Menu")
+
+        menu = Gio.Menu()
+        menu.append("Settings", "preview.settings")
+        menu.append("Release notes", "preview.release_notes")
+        menu.append("About", "preview.about")
+        menu.append("Quit", "preview.quit")
+        menu_button.set_menu_model(menu)
+
+        actions = Gio.SimpleActionGroup()
+        settings_action = Gio.SimpleAction.new("settings", None)
+        settings_action.connect(
+            "activate",
+            lambda *_: self._preview_only("Settings"),
+        )
+        release_notes_action = Gio.SimpleAction.new("release_notes", None)
+        release_notes_action.connect(
+            "activate",
+            lambda *_: self._preview_only("Release notes"),
+        )
+        about_action = Gio.SimpleAction.new("about", None)
+        about_action.connect(
+            "activate",
+            lambda *_: self._preview_only("About"),
+        )
+        quit_action = Gio.SimpleAction.new("quit", None)
+        quit_action.connect("activate", lambda *_: self.window.destroy())
+        actions.add_action(settings_action)
+        actions.add_action(release_notes_action)
+        actions.add_action(about_action)
+        actions.add_action(quit_action)
+        self.window.insert_action_group("preview", actions)
+
+        headerbar.pack_start(menu_button)
+        return headerbar
+
+    def _preview_only(self, name: str):
+        """Placeholder for app dialogs that the preview does not implement."""
+        dialog = Gtk.AlertDialog(
+            message=f"{name} is not implemented in the UI preview.\n\n"
+            "Open the installed protonvpn-app to test it for real."
+        )
+        dialog.show(self.window)
+
+    def _build_controls(self) -> Gtk.Box:
+        # Two compact rows on purpose: they let the window shrink to a small
+        # width, which the previous single wide row prevented.
+        outer = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4)
+        outer.set_margin_top(6)
+        outer.set_margin_bottom(6)
+        outer.set_margin_start(6)
+        outer.set_margin_end(6)
+
+        row1 = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+        for label, index in (
+            ("Unprotected", 0), ("Connecting", 1), ("Protected", 2), ("Error", 3),
+        ):
             button = Gtk.Button(label=label)
             button.connect(
                 "clicked", lambda _btn, idx=index: self._set_state(idx)
             )
-            controls.append(button)
+            row1.append(button)
 
-        state_button("Unprotected", 0)
-        state_button("Connecting", 1)
-        state_button("Protected", 2)
-        state_button("Error", 3)
-
+        row2 = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
         tier_button = Gtk.Button(label="Free/Paid")
         tier_button.connect("clicked", lambda _btn: self._toggle_tier())
-        controls.append(tier_button)
+        row2.append(tier_button)
 
         reload_button = Gtk.Button(label="Reload")
         reload_button.connect("clicked", lambda _btn: self._reload_css())
-        controls.append(reload_button)
+        row2.append(reload_button)
 
         self._state_label = Gtk.Label(label="")
-        self._state_label.set_margin_start(12)
+        self._state_label.set_margin_start(8)
         self._state_label.set_max_width_chars(18)
         self._state_label.set_ellipsize(0)
         self._state_label.add_css_class("dim-label")
-        controls.append(self._state_label)
+        row2.append(self._state_label)
 
-        return controls
+        outer.append(row1)
+        outer.append(row2)
+        return outer
 
     def _add_keyboard_shortcuts(self):
         controller = Gtk.EventControllerKey()
@@ -313,6 +374,9 @@ def main():
 
     apply_css()
     preview = PreviewApp(controller, vpn_widget)
+    size = args.get("size")
+    if size is not None:
+        preview.window.set_default_size(size[0], size[1])
     preview._set_state(0)
     preview.window.present()
 
@@ -381,6 +445,13 @@ def _parse_args() -> dict:
     if "--display" in argv:
         index = argv.index("--display")
         result["display"] = argv[index + 1] if index + 1 < len(argv) else ":0"
+    if "--size" in argv:
+        index = argv.index("--size")
+        try:
+            width, height = argv[index + 1].lower().split("x")
+            result["size"] = (int(width), int(height))
+        except (ValueError, IndexError):
+            result["size"] = None
     result["geometry"] = "--geometry" in argv
     return result
 

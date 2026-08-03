@@ -1,0 +1,17 @@
+/* Make the headerbar blend with the app's dark background instead of the
+   default theme's grey. background-image must be cleared too: GTK themes
+   paint the headerbar with a gradient image, not just a colour. */
+#main-window headerbar {
+    background-color: @background-norm;
+    background-image: none;
+    border: none;
+    box-shadow: none;
+}
+
+#main-window headerbar button {
+    color: @text-weak;
+}
+
+#main-window headerbar button:hover {
+    color: @text-norm;
+}
