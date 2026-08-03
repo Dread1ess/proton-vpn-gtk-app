@@ -45,6 +45,7 @@ class NotificationBar(Gtk.Revealer):
 
     def __init__(self):
         super().__init__()
+        self.set_name("notification-bar")
         self._clear_error_message_src_id = None
         self._notification_label = Gtk.Label()
         self._notification_label.set_wrap(True)

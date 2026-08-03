@@ -5,8 +5,25 @@
 
 #settings-window headerbar {
     background-color: @background-norm;
+    background-image: none;
     border: none;
+    border-bottom: 1px solid @border-weak;
     box-shadow: none;
+    min-height: 48px;
+}
+
+#settings-window headerbar .settings-title {
+    font-weight: 600;
+    font-size: 1.05em;
+    color: @text-norm;
+}
+
+#settings-window headerbar button {
+    color: @text-weak;
+}
+
+#settings-window headerbar button:hover {
+    color: @text-norm;
 }
 
 /* Category container — groups related settings with a header. */
@@ -43,6 +60,15 @@
     padding: 16px;
     margin: 4px 16px;
     box-shadow: none;
+}
+
+.setting-item:hover {
+    border-color: @border-norm;
+    background-color: rgba(255, 255, 255, 0.02);
+}
+
+.setting-item:disabled {
+    opacity: 0.6;
 }
 
 /* Title + description layout inside setting-item is a Gtk.Grid (common.py).
@@ -287,6 +313,28 @@
     border-radius: 16px;
 }
 
+#early-access-dialog headerbar,
+#bug-report-dialog headerbar,
+#about-dialog headerbar,
+#release-notes-dialog headerbar,
+#confirmation-dialog headerbar {
+    background-color: @background-norm;
+    background-image: none;
+    border: none;
+    border-bottom: 1px solid @border-weak;
+    box-shadow: none;
+    color: @text-norm;
+}
+
+#early-access-dialog headerbar .title,
+#bug-report-dialog headerbar .title,
+#about-dialog headerbar .title,
+#release-notes-dialog headerbar .title,
+#confirmation-dialog headerbar .title {
+    color: @text-norm;
+    font-weight: 600;
+}
+
 #early-access-dialog box,
 #confirmation-dialog box {
     margin: 20px;
@@ -300,9 +348,12 @@
 
 /* Notification bar inside settings window. */
 #settings-window #notification-bar {
-    background-color: @signal-info;
+    margin: 8px 16px 0 16px;
+}
+
+#settings-window #notification-bar > label {
     border-radius: 8px;
-    margin: 8px 16px;
+    padding: 10px 14px;
 }
 
 /* Viewport frame for scrolled windows. */

@@ -133,6 +133,13 @@ class SettingsWindow(Gtk.Window):  # pylint: disable=too-many-instance-attribute
         way the notification will span across the entire window while only the
         settings will be centered.
         """
+        headerbar = Gtk.HeaderBar()
+        headerbar.set_decoration_layout("menu:close")
+        title_label = Gtk.Label(label="Settings")
+        title_label.add_css_class("settings-title")
+        headerbar.set_title_widget(title_label)
+        self.set_titlebar(headerbar)
+
         self.main_container = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
         self.content_container = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
 

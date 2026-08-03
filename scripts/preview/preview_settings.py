@@ -169,9 +169,8 @@ class SettingsPreviewApp:
     def __init__(self):
         self._controller = SettingsMockController()
         self.window = SettingsWindow(self._controller)
-        self.window.set_name("main-window")
         self.window.set_title("Proton VPN GTK — Settings Preview")
-        self.window.set_default_size(620, 780)
+        self.window.set_default_size(620, 1600)
 
         # Patch EarlyAccessWidget to skip subprocess calls in preview
         EarlyAccessWidget.can_early_access_be_displayed = (
@@ -241,7 +240,6 @@ def _dump_geometry(preview):
 
     widget_names = [
         ("window", preview.window),
-        ("settings-window", preview._settings_window),
     ]
     for label, widget in widget_names:
         if widget is None:
